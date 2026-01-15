@@ -1,0 +1,67 @@
+library(tidyverse)
+library(ggplot2)
+library(ggrepel)
+library(viridis)
+
+employees <- read_csv("employees.csv")
+
+head(employees)
+glimpse(employees)
+summary(employees)
+
+colSums(is.na(employees))
+
+avg_salary <- employees %>%
+  group_by(department) %>%
+  summarize(mean_salary = mean(salary, na.rm = TRUE))
+avg_salary
+
+avg_perf <- employees %>%
+  group_by(department) %>%
+  summarize(mean_perf = mean(performance_score, na.rm = TRUE)) %>%
+  arrange(desc(mean_perf)) %>%
+  ggplot(aes(x = department, y = mean_perf)) +
+  geom_col()
+
+cor(employees$years_experience, employees$salary, use = "complete.obs")
+
+ggplot(employees, aes(x = reorder(department, -salary), y = salary, fill = department)) +
+  stat_summary(fun = mean, geom = "bar") +
+  labs(title = "Average Salary by Department",
+      x = "Department",
+      y = "Salary",
+      fill = "Department") +
+  scale_y_continuous(
+    breaks = c(0, 25000, 50000, 75000),
+    labels = c("0", "25k", "50k", "75k")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5,face = "bold"),
+  axis.text.x = element_text(face = "bold", color = "white"),
+  axis.text.y = element_text(color = "white"),
+  axis.title.x = element_text(face = "bold"),
+  axis.title.y = element_text(face = "bold"),
+  plot.background = element_rect(fill = "#828282"),
+  legend.position = "bottom") +
+  scale_fill_viridis_d(option = "magma")
+
+employees$label_point <- ifelse(employees$employee_id == 5, "Outlier", NA)
+
+ggplot(employees, aes(x = years_experience, y = salary, color = department)) +
+  geom_point(size = 3) +
+  geom_text_repel(aes(label = label_point),
+                  na.rm = TRUE, size = 3, color = "black") +
+  labs(title = "Experience vs Salary",
+      x = "Years of Experience",
+      y = "Salary",
+      color = "Department") +
+  scale_y_continuous(
+    breaks = c(50000, 75000),
+    labels = c("50k", "75k")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5),
+    legend.position = "bottom",
+    plot.background = element_rect(fill = "#828282"),
+    axis.text.x = element_text(color = "white"),
+    axis.text.y = element_text(color = "white")) +
+  geom_smooth(aes(group = 12344321), method = "lm", se = TRUE, linewidth = 1, fill = "white", alpha = 0.25) +
+  scale_color_viridis_d(option = "plasma")
